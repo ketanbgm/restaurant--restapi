@@ -149,6 +149,8 @@ module.exports.register_restaurant = function(req, res){
 		var address  = req.body.data.address;
 		var city  = req.body.data.city;
 		var state  = req.body.data.state;
+		var open_time = req.body.data.open_time;
+		var close_time = req.body.data.close_time;
 		req.body.data.last_update  = new Date();
 		if(!restaurant_name){
 			res.status(404).send({ message: "Invalid name" });
@@ -166,7 +168,11 @@ module.exports.register_restaurant = function(req, res){
 				res.status(404).send({ message: "Invalid city" });
 		} else if(!state) {
 				res.status(404).send({ message: "Invalid state" });
-		}  else{
+		} else if(!open_time) {
+				res.status(404).send({ message: "Invalid open time" });
+		} else if(!close_time) {
+				res.status(404).send({ message: "Invalid close time" });
+		} else{
 			connection.query("INSERT INTO restaurant set ?", req.body.data, function(err, rows){
 
 					 if(err){
