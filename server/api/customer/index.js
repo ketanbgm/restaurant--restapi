@@ -123,8 +123,13 @@ module.exports.book_table= function(req, res) {
 													res.status(400).send({message: "restaurant is closed at the moment"})
 												}
 												else{
-													connection.query("",[], function(err,res){
-														
+													connection.query("select restaurant_id from bookings where booking_from BETWEEN ? AND ? and booking_to 	BETWEEN ? AND ? and restaurant_id = ? and table_id =? ",[booking_from,booking_to,booking_from,booking_to,restaurant_id, table_id], function(err,rows){
+														if(err){
+															throw err;
+														}
+														else{
+															console.log(rows);	
+															res.send("testing")													}
 													})
 													/*res.send("restaurant is open");*/
 												}
