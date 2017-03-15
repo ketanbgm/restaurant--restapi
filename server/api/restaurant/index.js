@@ -32,23 +32,23 @@ module.exports.get_restaurant = function(req, res){
 	})
 }
 
-module.exports.search_restaurant = function(req, res){
-	 var id = req.params.id;
-	 console.log(id);
-	req.getConnection(function(err, connection){
-		connection.query("select * from restaurant where id = ?",[id], function(err, rows){
-				if(err){
-					res.status(404).send({ message: "Database Error" });
-			} else{
-					if(rows.length > 1){
-						res.status(200).send(rows);
-					} else{
-							res.status(200).send({message: "No Record Found"});
-					}
-				}
-		})
-	})
-}
+// module.exports.search_restaurant = function(req, res){
+// 	 var id = req.params.id;
+// 	 console.log(id);
+// 	req.getConnection(function(err, connection){
+// 		connection.query("select * from restaurant where id = ?",[id], function(err, rows){
+// 				if(err){
+// 					res.status(404).send({ message: "Database Error" });
+// 			} else{
+// 					if(rows.length > 1){
+// 						res.status(200).send(rows);
+// 					} else{
+// 							res.status(200).send({message: "No Record Found"});
+// 					}
+// 				}
+// 		})
+// 	})
+// }
 
 
 module.exports.delete_restaurant = function(req, res){

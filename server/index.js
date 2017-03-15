@@ -5,6 +5,8 @@ var mysql = require('mysql');
 var restaurant = require('./api/restaurant/index');
 var customer = require('./api/customer/index');
 var connection  = require('express-myconnection');
+// var moment = require('moment');
+// app.use(moment);
 app.use(bodyparser.urlencoded({ extended: true }));
 app.use(bodyparser.json());
 app.use(
@@ -13,7 +15,7 @@ app.use(
 
         host: 'localhost',
         user: 'root',
-        password : 'r00t',
+        password : '',
         port : 3306, //port mysql
         database:'restaurant'
 
@@ -29,8 +31,10 @@ var server = app.listen(7000, function() {
     app.post('/add_table', restaurant.add_table);
     app.put('/update_table_capacity/update/:id', restaurant.update_table_capacity);
     app.delete('/delete_table/delete/:id', restaurant.delete_table);
-    app.get('/search_restaurant', restaurant.search_restaurant);
+    // app.get('/search_restaurant', restaurant.search_restaurant);
     app.get('/search/table/:id/:capacity', customer.search_table_capacity);
     app.post('/review', customer.review);
     app.post('/book_table', customer.book_table);
+      app.post('/cancle_table', customer.cancle_table);
+      app.get('/bookings_by_time/:table_id/:start_date/:end_date', customer.bookings_by_time);
 });
