@@ -15,7 +15,7 @@ app.use(
 
         host: 'localhost',
         user: 'root',
-        password : '',
+        password : 'r00t',
         port : 3306, //port mysql
         database:'restaurant'
 
@@ -35,6 +35,8 @@ var server = app.listen(7000, function() {
     app.get('/search/table/:id/:capacity', customer.search_table_capacity);
     app.post('/review', customer.review);
     app.post('/book_table', customer.book_table);
-      app.post('/cancle_table', customer.cancle_table);
-      app.get('/bookings_by_time/:table_id/:start_date/:end_date', customer.bookings_by_time);
+    app.post('/cancle_table', customer.cancle_table);
+    app.get('/bookings_by_time/:table_id/:start_date/:end_date', customer.bookings_by_time);
+    app.post('/search_restaurant', customer.search_restaurant);
+
 });

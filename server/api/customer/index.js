@@ -12,18 +12,14 @@ module.exports.search_table_capacity = function(req, res){
 				res.status(404).send({ message: "Database Error" });
 			}
 			else{
-				console.log(rows)
 				if(rows.length < 1){
 					res.status(400).send({message : "Restaurant Not found"})
 				}
 				else{
 						connection.query("select r.restaurant_name, t.table_no, t.capacity, r.email, r.mobile,r.type, r.locality, r.address from tables t,restaurant r where t.restaurant_id = ? and r.id and t.capacity >= ?",[id,capacity], function(err, rows){
 	 			if(err){
-	 				console.log(err);
 	 				res.status(404).send({ message: "Database Error" });
 	 		} else{
-	 			console.log(rows)
-					console.log(rows.length);
 					if(rows.length < 1){
 						res.status(400).send({ message : "No tables found"});
 					} else{
@@ -32,15 +28,12 @@ module.exports.search_table_capacity = function(req, res){
 
 
 	 			}
-	 	})
+	 		})
 				}
 			}
-		})
-
-
-
- });
- }
+	  })
+   });
+  }
 };
 
 module.exports.review = function(req, res){
@@ -68,7 +61,6 @@ module.exports.review = function(req, res){
 				res.status(404).send({ message: "Database Error" });
 			}
 			else{
-				console.log(rows)
 				if(rows.length < 1){
 					res.status(400).send({message : "Restaurant Not found"})
 				}
@@ -129,17 +121,14 @@ module.exports.book_table= function(req, res) {
 	req.getConnection(function(err,connection){
 		connection.query("SELECT id FROM restaurant WHERE id = ?",[restaurant_id], function(err,rows){
 			if(err){
-				console.log(err);
 				res.status(404).send({ message: "Database Error" });
 			}else {
-				console.log(rows);
 				if(rows.length < 1){
 					res.status(400).send({ message: "Restaurant not found"});
 				}
 				else{
 						connection.query("SELECT id FROM tables WHERE id = ?",[table_id], function(err,rows){
 							if(err){
-								console.log(err);
 								res.status(404).send({ message: "Database Error" });
 								}else {
 									if(rows.length < 1){
@@ -159,7 +148,6 @@ module.exports.book_table= function(req, res) {
 															throw err;
 														}
 														else{
-															console.log(rows);
 															if(rows.length > 0){
 																res.status(400).send({ message: "Slot not available" });
 															}
@@ -204,12 +192,13 @@ module.exports.cancle_table= function(req, res) {
 	}  else {
 		connection.query("update bookings set status = ? where id = ? and status = ?",[0,booking_id,1], function(err, rows){
 			if(err){
-				console.log(err);
 			} else {
 				if(rows.affectedRows < 1){
 					res.status(404).send({ message: "Booking not found" });
 				}
-				console.log(rows);
+				else{
+					res.status(200).send({ message: "Booking cancled" });
+				}
 			}
 		});
 	}
@@ -232,7 +221,6 @@ module.exports.bookings_by_time = function(req, res){
 	req.getConnection(function(err, connection){
 		connection.query("select r.restaurant_name, t.table_no, t.capacity, b.booking_date,b.booking_from,b.booking_to,b.customer_name, b.mobile, b.email  from restaurant r,bookings b, tables t where b.table_id = t.id and b.table_id = ? and b.restaurant_id = r.id and b.status = ? and (b.booking_date BETWEEN ? and ?)",[table_id, 1, start_date, end_date], function(err, rows){
 				if(err){
-					console.log(err);
 					res.status(404).send({ message: "Database Error" });
 			} else{
 					if(rows.length > 1){
@@ -244,4 +232,50 @@ module.exports.bookings_by_time = function(req, res){
 		})
 	})
 }
+}
+
+module.exports.search_restaurant = function(req, res){
+	var restaurant_name = req.body.data.restaurant_name;
+	var locality = req.body.data.locality;
+	var cuisine = req.body.data.cuisine;
+
+	if(!restaurant_name && !locality && !cuisine){
+		res.status(404).send({ message: "Select atleast one filter" });
+	} else {
+		req.getConnection(function(err, connection){
+		var searchQuery = " status = 1 ";
+        var parameter  = [1];
+         if(restaurant_name){
+        	searchQuery = searchQuery+ "AND restaurant_name like  '%"+restaurant_name+"%'";
+        	//parameter.push('%'+restaurant_name+'%');
+
+        }
+        if(locality){
+        	searchQuery = searchQuery+ "AND locality like '%"+locality+"%'";
+        	parameter.push(locality);
+
+        }
+
+		if(cuisine){
+        	searchQuery = searchQuery+ "AND type like '%"+cuisine+"%'";
+        	parameter.push(cuisine);
+
+        }
+        var sql = 'SELECT * FROM restaurant WHERE '+ searchQuery;
+        connection.query(sql, function(err, rows){
+            if(err){
+                res.status(400).send({ message: "Database Error" });
+            }
+            else{
+            	if(rows.length < 1){
+            		res.status(400).send({ message: "No restaurant found" });
+            	}
+            	else{
+            		res.status(200).send(rows);
+                  	}
+            }
+        });
+
+		});
+	}
 }
