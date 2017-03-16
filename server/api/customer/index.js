@@ -22,7 +22,7 @@ module.exports.search_table_capacity = function(req, res) {
                             message: "Restaurant Not found"
                         })
                     } else {
-                        connection.query("select r.restaurant_name, t.table_no, t.capacity, r.email, r.mobile,r.type, r.locality, r.address from tables t,restaurant r where t.restaurant_id = ? and r.id and t.capacity >= ?", [id, capacity], function(err, rows) {
+                        connection.query("select r.restaurant_name, t.table_no, t.capacity, r.email, r.mobile,r.type, r.locality, r.address from tables t,restaurant r where t.restaurant_id = ? and t.restaurant_id = r.id and t.capacity >= ?", [id, capacity], function(err, rows) {
                             if (err) {
                                 res.status(404).send({
                                     message: "Database Error"
@@ -92,7 +92,7 @@ module.exports.review = function(req, res) {
                                 });
                             } else {
                                 res.status(200).send({
-                                    message: "New table added to restaurant"
+                                    message: "Thank you for your review"
                                 });
                             }
                         })

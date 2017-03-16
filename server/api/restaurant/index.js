@@ -27,7 +27,7 @@ module.exports.get_restaurant = function(req, res) {
                     message: "Database Error"
                 });
             } else {
-                if (rows.length > 1) {
+                if (rows.length > 0) {
                     res.status(200).send(rows);
                 } else {
                     res.status(200).send({
@@ -80,7 +80,7 @@ module.exports.add_table = function(req, res) {
             res.status(400).send({
                 message: "Invalid Restaurant"
             });
-        } else if (!table_no || isNaN(table_no)) {
+        } else if (!table_no) {
             res.status(400).send({
                 message: "Invalid Table number"
             });
@@ -152,7 +152,7 @@ module.exports.update_table_capacity = function(req, res) {
             var data = {
                 capacity: capacity
             };
-            connection.query("UPDATE tables set ? WHERE restaurant_id = ? ", [data, id], function(err, rows) {
+            connection.query("UPDATE tables set ? WHERE id = ? ", [data, id], function(err, rows) {
                 if (err) {
                     res.status(400).send({
                         message: "Database Error"
