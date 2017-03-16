@@ -52,9 +52,16 @@ module.exports.delete_restaurant = function(req, res) {
         req.getConnection(function(err, connection) {
             connection.query("delete from restaurant where id = ?", [id], function(err, rows) {
                 if (err) {
+									console.log(err);
+									if(err.code == "ER_ROW_IS_REFERENCED_2"){
+										res.status(400).send({
+												message: "Bookings are available can not be deleted"
+										});
+									}else{
                     res.status(400).send({
                         message: "Database Error"
                     });
+									}
                 } else {
                     if (rows.affectedRows == 0) {
                         res.status(404).send({
