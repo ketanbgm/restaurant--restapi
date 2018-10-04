@@ -3,7 +3,7 @@ module.exports.search_table_capacity = function(req, res) {
     var capacity = req.params.capacity;
     if (!id || isNaN(id)) {
         res.status(404).send({
-            message: "Invalid table"
+            message: "Invalid Restaurant"
         });
     } else if (!capacity || isNaN(capacity)) {
         res.status(404).send({
@@ -48,14 +48,14 @@ module.exports.search_table_capacity = function(req, res) {
 
 module.exports.review = function(req, res) {
     req.getConnection(function(err, connection) {
-        var customer_name = req.body.data.customer_name;
-        var email = req.body.data.email;
-        var review = req.body.data.review;
-        var review_description = req.body.data.review_description;
-        var restaurant_id = req.body.data.restaurant_id;
+        var customer_name = req.body.customer_name;
+        var email = req.body.email;
+        var review = req.body.review;
+        var review_description = req.body.review_description;
+        var restaurant_id = req.body.restaurant_id;
         var regex = /^[A-Za-z ]+$/;
         var Email_regex = /^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/;
-        req.body.data.last_update = new Date();
+        req.body.last_update = new Date();
         if (!restaurant_id || isNaN(restaurant_id)) {
             res.status(400).send({
                 message: "Invalid Restaurant"
@@ -85,7 +85,7 @@ module.exports.review = function(req, res) {
                             message: "Restaurant Not found"
                         })
                     } else {
-                        connection.query("INSERT INTO reviews set ?", req.body.data, function(err, rows) {
+                        connection.query("INSERT INTO reviews set ?", req.body, function(err, rows) {
                             if (err) {
                                 res.status(400).send({
                                     message: "Database Error"
@@ -108,25 +108,29 @@ module.exports.review = function(req, res) {
 
 module.exports.book_table = function(req, res) {
     var moment = require('moment');
-    var restaurant_id = req.body.data.restaurant_id;
-    var customer_name = req.body.data.customer_name;
-    var email = req.body.data.email;
-    var booking_date = req.body.data.booking_date;
-    var booking_from = req.body.data.booking_from;
-    var booking_to = req.body.data.booking_to;
+    var restaurant_id = req.body.restaurant_id;
+    var customer_name = req.body.customer_name;
+    var email = req.body.email;
+    var booking_date = req.body.booking_date;
+    var booking_from = req.body.booking_from;
+    var booking_to = req.body.booking_to;
     var book_from = moment(booking_from, 'HH:mm').add(1, 'minutes').format('HH:mm');
-    var table_id = req.body.data.table_id;
-    var mobile = req.body.data.mobile;
+    var table_id = req.body.table_id;
+    var mobile = req.body.mobile;
     var regex = /^[A-Za-z ]+$/;
     var Email_regex = /^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/;
     var mobile_regex = /^[789]\d{9}$/;
     var date_regex = /^\d{4}[./-]\d{2}[./-]\d{2}$/;
     var time_reg = new RegExp('^[0-9][0-9][:][0-9][0-9]$');
-    req.body.data.status = 1;
+    req.body.status = 1;
     var current_date = moment().format('YYYY-MM-DD');
     var booking_prior = moment(current_date, "YYYY-MM-DD").add(7, 'days').format('YYYY-MM-DD');
     var current_time = moment().format('HH:mm');
-    if (!restaurant_id || isNaN(restaurant_id)) {
+    if(booking_date < current_date){
+        res.status(400).send({
+            message: "Booking date must be greater than or equal to current date"
+        });
+    } else if (!restaurant_id || isNaN(restaurant_id)) {
         res.status(400).send({
             message: "Invalid Restaurant"
         });
@@ -210,7 +214,7 @@ module.exports.book_table = function(req, res) {
                                                                 message: "Slot not available"
                                                             });
                                                         } else {
-                                                            connection.query("insert into bookings set ?", req.body.data, function(err, rows) {
+                                                            connection.query("insert into bookings set ?", req.body, function(err, rows) {
                                                                 if (err) {
                                                                     res.status(400).send({
                                                                         message: "Database Error"
@@ -242,7 +246,7 @@ module.exports.book_table = function(req, res) {
 
 
 module.exports.cancle_table = function(req, res) {
-    var booking_id = req.body.data.booking_id;
+    var booking_id = req.body.booking_id;
     var moment = require('moment');
 
     if (!booking_id || isNaN(booking_id)) {
@@ -336,11 +340,11 @@ module.exports.bookings_by_time = function(req, res) {
 }
 
 module.exports.search_restaurant = function(req, res) {
-    var restaurant_name = req.body.data.restaurant_name;
-    var locality = req.body.data.locality;
-    var cuisine = req.body.data.cuisine;
+    var restaurant_name = req.body.restaurant_name;
+    var locality = req.body.locality;
+    var cuisines = req.body.cuisines;
 
-    if (!restaurant_name && !locality && !cuisine) {
+    if (!restaurant_name && !locality && !cuisines) {
         res.status(404).send({
             message: "Select atleast one filter"
         });
@@ -350,19 +354,15 @@ module.exports.search_restaurant = function(req, res) {
             var parameter = [1];
             if (restaurant_name) {
                 searchQuery = searchQuery + "AND restaurant_name like  '%" + restaurant_name + "%'";
-                //parameter.push('%'+restaurant_name+'%');
-
             }
             if (locality) {
                 searchQuery = searchQuery + "AND locality like '%" + locality + "%'";
                 parameter.push(locality);
-
             }
 
-            if (cuisine) {
-                searchQuery = searchQuery + "AND type like '%" + cuisine + "%'";
-                parameter.push(cuisine);
-
+            if (cuisines) {
+                searchQuery = searchQuery + "AND cuisines like '%" + cuisines + "%'";
+                parameter.push(cuisines);
             }
             var sql = 'SELECT * FROM restaurant WHERE ' + searchQuery;
             connection.query(sql, function(err, rows) {
