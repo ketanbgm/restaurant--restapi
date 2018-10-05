@@ -6,7 +6,7 @@ module.exports.list_restaurant = function(req, res) {
                     message: "Database Error"
                 });
             } else {
-                if (rows.length > 1) {
+                if (rows.length >= 1) {
                     res.status(200).send(rows);
                 } else {
                     res.status(200).send({
@@ -50,40 +50,65 @@ module.exports.delete_restaurant = function(req, res) {
 
 
         req.getConnection(function(err, connection) {
-            connection.query("delete from restaurant where id = ?", [id], function(err, rows) {
+            connection.query("select * from bookings where restaurant_id = ?", [id], function(err, rows) {
                 if (err) {
-                    console.log(err);
-                    if (err.code == "ER_ROW_IS_REFERENCED_2") {
-                        res.status(400).send({
-                            message: "Bookings are available, restuarant can not be deleted"
-                        });
-                    } else {
-                        res.status(400).send({
-                            message: "Database Error"
-                        });
-                    }
+                    res.status(404).send({
+                        message: "Database Error"
+                    });
                 } else {
-                    if (rows.affectedRows == 0) {
-                        res.status(404).send({
-                            message: "Invalid Restaurant"
+                    if (rows.length > 0) {
+                        res.status(409).send({
+                            message: "Restuarant can not be deleted, Bookings exists"
                         });
                     } else {
-                        res.status(200).send({
-                            message: "Restaurant details deleted"
-                        });
+                        connection.query("select * from tables where restaurant_id = ?", [id], function(err, rows) {
+                            if (err) {
+                                res.status(404).send({
+                                    message: "Database Error"
+                                });
+                            } else {
+                                if (rows.length > 0) {
+                                    res.status(409).send({
+                                        message: "Restuarant can not be deleted, Tables exists"
+                                    });
+                                } else {
+                                    connection.query("delete from restaurant where id = ?", [id], function(err, rows) {
+                                        if (err) {
+
+                                            res.status(400).send({
+                                                message: "Database Error"
+                                            });
+
+                                        } else {
+                                            if (rows.affectedRows == 0) {
+                                                res.status(404).send({
+                                                    message: "Invalid Restaurant"
+                                                });
+                                            } else {
+                                                res.status(200).send({
+                                                    message: "Restaurant details deleted"
+                                                });
+                                            }
+                                        }
+                                    })
+                                }
+                            }
+                        })
+
                     }
                 }
             })
+
         })
     }
 }
 module.exports.add_table = function(req, res) {
-        req.getConnection(function(err, connection) {
+    req.getConnection(function(err, connection) {
         var restaurant_id = req.body.restaurant_id;
         var table_no = req.body.table_no;
         var capacity = req.body.capacity;
         req.body.last_updated = new Date();
-         if (!table_no) {
+        if (!table_no) {
             res.status(400).send({
                 message: "Invalid Table number"
             });
@@ -92,44 +117,44 @@ module.exports.add_table = function(req, res) {
                 message: "Invalid capacity"
             });
         } else {
-        connection.query("Select * from restaurant where id = ?", [restaurant_id], function(err, rows) {
-            if (err) {
-                res.status(400).send({
-                    message: "Database Error"
-                });
-            } else {
-                if (rows.length <= 0 || !restaurant_id || isNaN(restaurant_id)) {
-                    res.status(404).send({
-                        message: "Invalid Restaurant"
+            connection.query("Select * from restaurant where id = ?", [restaurant_id], function(err, rows) {
+                if (err) {
+                    res.status(400).send({
+                        message: "Database Error"
                     });
-                } else{
-                        connection.query("Select * from tables where table_no = ? and restaurant_id = ?", [table_no,restaurant_id], function(err, rows) {
+                } else {
+                    if (rows.length <= 0 || !restaurant_id || isNaN(restaurant_id)) {
+                        res.status(404).send({
+                            message: "Invalid Restaurant"
+                        });
+                    } else {
+                        connection.query("Select * from tables where table_no = ? and restaurant_id = ?", [table_no, restaurant_id], function(err, rows) {
                             if (err) {
                                 console.log(err)
                                 res.status(400).send({
                                     message: "Database Error"
                                 });
                             } else {
-                                if (rows.length > 0){
+                                if (rows.length > 0) {
                                     res.status(404).send({
                                         message: "Table already Exists"
                                     });
-                                } else{
+                                } else {
                                     connection.query("INSERT INTO tables set ?", req.body, function(err, rows) {
                                         if (err) {
                                             res.status(400).send({
                                                 message: "Database Error"
-                                             });
-                                         } else {
+                                            });
+                                        } else {
                                             res.status(200).send({
                                                 message: "New table added to restaurant"
                                             });
                                         }
-                                     })
+                                    })
                                 }
                             }
-                        })    
-                        
+                        })
+
                     }
                 }
             })
@@ -144,20 +169,36 @@ module.exports.delete_table = function(req, res) {
         });
     } else {
         req.getConnection(function(err, connection) {
-            connection.query("delete from tables where id = ?", [id], function(err, rows) {
+            connection.query("select * from bookings where table_id = ? and status = ?", [id, 1], function(err, rows) {
                 if (err) {
+                    console.log(err);
                     res.status(400).send({
                         message: "Database Error"
                     });
                 } else {
-                    if (rows.affectedRows == 0) {
-                        res.status(404).send({
-                            message: "Invalid Table"
+                    if (rows.length > 0) {
+                        res.status(409).send({
+                            message: "Booking exists table can not be deleted"
                         });
                     } else {
-                        res.status(200).send({
-                            message: "Table deleted"
-                        });
+                        connection.query("delete from tables where id = ?", [id], function(err, rows) {
+                            if (err) {
+                                console.log(err);
+                                res.status(400).send({
+                                    message: "Database Error"
+                                });
+                            } else {
+                                if (rows.affectedRows == 0) {
+                                    res.status(404).send({
+                                        message: "Invalid Table"
+                                    });
+                                } else {
+                                    res.status(200).send({
+                                        message: "Table deleted"
+                                    });
+                                }
+                            }
+                        })
                     }
                 }
             })
@@ -212,7 +253,7 @@ module.exports.register_restaurant = function(req, res) {
         var mobile = req.body.mobile;
         var type = req.body.type;
         var locality = req.body.locality;
-        var cuisines =  req.body.cuisines;
+        var cuisines = req.body.cuisines;
         var address = req.body.address;
         var city = req.body.city;
         var state = req.body.state;
@@ -265,11 +306,11 @@ module.exports.register_restaurant = function(req, res) {
             res.status(404).send({
                 message: "Invalid close time"
             });
-        } else if(!cuisines){
+        } else if (!cuisines) {
             res.status(404).send({
                 message: "Invalid cuisines"
             });
-        }else {
+        } else {
             connection.query("Select * from restaurant where email = ?", [email], function(err, rows) {
                 if (err) {
                     res.status(404).send({

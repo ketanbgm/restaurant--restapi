@@ -126,7 +126,7 @@ module.exports.book_table = function(req, res) {
     var current_date = moment().format('YYYY-MM-DD');
     var booking_prior = moment(current_date, "YYYY-MM-DD").add(7, 'days').format('YYYY-MM-DD');
     var current_time = moment().format('HH:mm');
-    if(booking_date < current_date){
+    if (booking_date < current_date) {
         res.status(400).send({
             message: "Booking date must be greater than or equal to current date"
         });
@@ -266,33 +266,41 @@ module.exports.cancle_table = function(req, res) {
                             message: "Database error"
                         });
                     } else {
-                        var booking_date = rows[0].booking_date;
-                        var current_date = moment().format('YYYY-MM-DD');
-                        booking_date = moment(booking_date).format('YYYY-MM-DD');
-                        if (booking_date < current_date) {
-                            res.status(404).send({
-                                message: "Booking cannot be cancled as booked date is passed date"
-                            });
-                        } else {
+                        if (rows.length > 0) {
+                            console.log(rows[0]);
+                            var booking_date = rows[0].booking_date;
+                            var current_date = moment().format('YYYY-MM-DD');
+                            booking_date = moment(booking_date).format('YYYY-MM-DD');
+                            if (booking_date < current_date) {
+                                res.status(404).send({
+                                    message: "Booking cannot be cancled as booked date is passed date"
+                                });
+                            } else {
 
-                            connection.query("update bookings set status = ? where id = ? and status = ?", [0, booking_id, 1], function(err, rows) {
-                                if (err) {
-                                    res.status(404).send({
-                                        message: "Database error"
-                                    });
-                                } else {
-                                    if (rows.affectedRows < 1) {
+                                connection.query("delete from bookings where id = ? and status = ?", [booking_id, 1], function(err, rows) {
+                                    if (err) {
                                         res.status(404).send({
-                                            message: "Booking not found"
+                                            message: "Database error"
                                         });
                                     } else {
-                                        res.status(200).send({
-                                            message: "Booking cancled"
-                                        });
+                                        if (rows.affectedRows < 1) {
+                                            res.status(404).send({
+                                                message: "Booking not found"
+                                            });
+                                        } else {
+                                            res.status(200).send({
+                                                message: "Booking cancled"
+                                            });
+                                        }
                                     }
-                                }
+                                });
+                            }
+                        } else {
+                            res.status(404).send({
+                                message: "Booking not found"
                             });
                         }
+
 
                     }
                 });
@@ -326,7 +334,7 @@ module.exports.bookings_by_time = function(req, res) {
                         message: "Database Error"
                     });
                 } else {
-                    if (rows.length > 1) {
+                    if (rows.length >= 1) {
                         res.status(200).send(rows);
                     } else {
                         res.status(200).send({
